@@ -44,10 +44,10 @@ The app has no Dock icon; it lives as a key icon in the menu bar next to the clo
 
 ## Using it
 
-Clicking the menu-bar key icon drops a plain macOS menu: one line per password (`Name — 123456`),
-click it to copy, then Manage Passwords… / Settings… / Quit.
+Clicking the menu-bar key icon drops a plain macOS menu: one line per password, marked with a copy
+glyph and reading `Name (123456)`. Click it to copy, then Manage Passwords / Settings / Quit.
 
-**Manage Passwords…** is the fuller view: live codes, a countdown ring per row, a Copy button,
+**Manage Passwords** is the fuller view: live codes, a countdown ring per row, a Copy button,
 drag-to-reorder, search, edit and delete. Its **+** button (or ⌘N) is where passwords are added.
 
 That opens a fixed 470×620 window with three things:

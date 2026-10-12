@@ -39,7 +39,13 @@ enum VaultStorage {
         }
     }
 
+    /// Set by the tests so they operate on a scratch directory. Overriding `HOME` is not enough —
+    /// Foundation resolves Application Support independently of the environment variable, so a test
+    /// that only swaps `HOME` would read, overwrite and then delete the real vault.
+    static var directoryOverride: URL?
+
     static var directory: URL {
+        if let directoryOverride { return directoryOverride }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return base.appendingPathComponent("iOTP", isDirectory: true)
     }
