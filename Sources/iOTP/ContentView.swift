@@ -77,11 +77,18 @@ struct ContentView: View {
             ForEach(filtered) { entry in
                 EntryRow(entry: entry,
                          justCopied: copiedID == entry.id,
+                         // Reordering is relative to the full list, so it is held back while a
+                         // search hides part of it and the result would look arbitrary.
+                         canReorder: search.isEmpty,
+                         canMoveUp: search.isEmpty && store.canMove(id: entry.id, by: -1),
+                         canMoveDown: search.isEmpty && store.canMove(id: entry.id, by: 1),
                          onCopy: { copy(entry) },
                          onEdit: { edit(entry) },
                          onDelete: { store.delete(ids: [entry.id]) },
                          onCopyCode: { copyPart(entry, order: .codeOnly) },
-                         onCopyPassword: { copyPart(entry, order: .passwordOnly) })
+                         onCopyPassword: { copyPart(entry, order: .passwordOnly) },
+                         onMoveUp: { store.move(id: entry.id, by: -1) },
+                         onMoveDown: { store.move(id: entry.id, by: 1) })
                     .tag(entry.id)
             }
             .onMove { indices, destination in
@@ -163,16 +170,28 @@ struct ContentView: View {
 struct EntryRow: View {
     let entry: OTPEntry
     let justCopied: Bool
+    let canReorder: Bool
+    let canMoveUp: Bool
+    let canMoveDown: Bool
     let onCopy: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
     let onCopyCode: () -> Void
     let onCopyPassword: () -> Void
+    let onMoveUp: () -> Void
+    let onMoveDown: () -> Void
 
     @EnvironmentObject private var store: VaultStore
 
     var body: some View {
         HStack(spacing: 12) {
+            if canReorder {
+                Image(systemName: "line.3.horizontal")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .help("Drag to reorder, or use the row menu")
+            }
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title)
                     .font(.body.weight(.medium))
@@ -209,6 +228,8 @@ struct EntryRow: View {
                 Button("Copy code only", action: onCopyCode)
                 Button("Copy password only", action: onCopyPassword)
                 Divider()
+                moveCommands
+                Divider()
                 Button("Edit…", action: onEdit)
                 Button("Delete", role: .destructive, action: onDelete)
             } label: {
@@ -226,9 +247,19 @@ struct EntryRow: View {
             Button("Copy code only", action: onCopyCode)
             Button("Copy password only", action: onCopyPassword)
             Divider()
+            moveCommands
+            Divider()
             Button("Edit…", action: onEdit)
             Button("Delete", role: .destructive, action: onDelete)
         }
+    }
+
+    @ViewBuilder
+    private var moveCommands: some View {
+        Button("Move Up", action: onMoveUp)
+            .disabled(!canMoveUp)
+        Button("Move Down", action: onMoveDown)
+            .disabled(!canMoveDown)
     }
 
     private var remaining: Int {

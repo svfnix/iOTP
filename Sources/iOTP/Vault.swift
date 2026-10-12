@@ -264,6 +264,21 @@ final class VaultStore: ObservableObject {
         save()
     }
 
+    /// Shifts one entry a single step. Backs the Move Up / Move Down commands, which work even
+    /// where a drag is awkward — the rows carry buttons and menus that can swallow the gesture.
+    func move(id: UUID, by offset: Int) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        let target = index + offset
+        guard entries.indices.contains(target) else { return }
+        entries.swapAt(index, target)
+        save()
+    }
+
+    func canMove(id: UUID, by offset: Int) -> Bool {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return false }
+        return entries.indices.contains(index + offset)
+    }
+
     // MARK: - Clipboard
 
     /// Builds the string a Copy button puts on the clipboard.
