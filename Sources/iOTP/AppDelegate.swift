@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if store.isLocked {
             menu.addItem(item("Unlock with \(BiometricLock.description)…", #selector(unlockVault)))
             menu.addItem(.separator())
-            menu.addItem(item("Settings…", #selector(openSettingsFromMenu)))
+            menu.addItem(item("Settings", #selector(openSettingsFromMenu)))
             menu.addItem(.separator())
             menu.addItem(item("Quit iOTP", #selector(quit)))
             return
@@ -95,26 +95,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             for entry in store.entries {
                 let title: String
                 if showCodes, let code = entry.code(at: Date()) {
-                    title = "\(entry.title)  —  \(code)"
+                    title = "\(entry.title) (\(code))"
                 } else {
                     title = entry.title
                 }
                 let item = NSMenuItem(title: title, action: #selector(copyEntryFromMenu(_:)), keyEquivalent: "")
                 item.target = self
                 item.representedObject = entry.id
+                item.image = Self.copyGlyph
+                item.toolTip = "Copy password + code"
                 menu.addItem(item)
             }
         }
 
         menu.addItem(.separator())
-        menu.addItem(item("Manage Passwords…", #selector(openManageFromMenu)))
+        menu.addItem(item("Manage Passwords", #selector(openManageFromMenu)))
         if store.lockEnabled {
             menu.addItem(item("Lock Now", #selector(lockVault)))
         }
-        menu.addItem(item("Settings…", #selector(openSettingsFromMenu)))
+        menu.addItem(item("Settings", #selector(openSettingsFromMenu)))
         menu.addItem(.separator())
         menu.addItem(item("Quit iOTP", #selector(quit)))
     }
+
+    /// Marks the rows that copy when clicked. A template image lets macOS recolour it for light,
+    /// dark and the blue highlight on its own.
+    private static let copyGlyph: NSImage? = {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 12, weight: .regular)
+        let image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: "Copy")?
+            .withSymbolConfiguration(configuration)
+        image?.isTemplate = true
+        return image
+    }()
 
     private func item(_ title: String, _ action: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")

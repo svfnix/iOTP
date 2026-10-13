@@ -127,10 +127,20 @@ do {
 }
 
 print("\nEncrypted file storage")
-// Runs against a throwaway HOME so the real vault is never touched.
+// Points the storage layer at a scratch directory. This must be an explicit override: setting HOME
+// does not move Application Support, so the test would otherwise destroy the real vault.
 let sandbox = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("iotp-storage-\(UUID().uuidString)")
 try? FileManager.default.createDirectory(at: sandbox, withIntermediateDirectories: true)
-setenv("HOME", sandbox.path, 1)
+VaultStorage.directoryOverride = sandbox
+
+// Guard the guard: if the override ever stops working, fail loudly instead of deleting real data.
+let realVault = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    .appendingPathComponent("iOTP", isDirectory: true)
+check("storage tests are sandboxed", VaultStorage.directory.path != realVault.path)
+guard VaultStorage.directory.path != realVault.path else {
+    print("\nRefusing to run storage tests against the real vault.")
+    exit(1)
+}
 
 do {
     check("nothing stored yet", try VaultStorage.load() == nil)
