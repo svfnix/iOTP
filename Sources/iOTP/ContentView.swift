@@ -108,7 +108,7 @@ struct ContentView: View {
                 .font(.title3.weight(.medium))
             Text("Add one, then it shows up in the menu bar next to the clock.")
                 .foregroundStyle(.secondary)
-            Button("Add Password…") { AppDelegate.shared?.openEditorForNew() }
+            Button("Add Password") { AppDelegate.shared?.openEditorForNew() }
                 .controlSize(.large)
             .padding(.top, 4)
         }
@@ -241,7 +241,7 @@ struct EntryRow: View {
                 Divider()
                 moveCommands
                 Divider()
-                Button("Edit…", action: onEdit)
+                Button("Edit", action: onEdit)
                 Button("Delete", role: .destructive, action: onDelete)
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -273,7 +273,7 @@ struct EntryRow: View {
             Divider()
             moveCommands
             Divider()
-            Button("Edit…", action: onEdit)
+            Button("Edit", action: onEdit)
             Button("Delete", role: .destructive, action: onDelete)
         }
     }

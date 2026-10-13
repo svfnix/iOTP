@@ -59,10 +59,10 @@ That opens a fixed 470×620 window with three things:
 2. **Password** — your fixed password.
 3. **Authenticator QR** — feed it the QR in any of four ways:
    - drag a QR image or screenshot onto the dashed box,
-   - **Scan from Screen…** — drag a selection over a QR that is on screen right now
+   - **Scan from Screen** — drag a selection over a QR that is on screen right now
      (macOS asks for Screen Recording permission the first time),
-   - **Choose Image…** — pick a saved screenshot or photo of the QR,
-   - **Paste** — an `otpauth://…` link or a QR image already on the clipboard.
+   - **Choose Image** — pick a saved screenshot or photo of the QR,
+   - **Paste** — an `otpauth://` link or a QR image already on the clipboard.
 
    There is also a disclosure row for typing the base32 setup key by hand, with algorithm,
    digit-count and period controls for the rare site that does not use the SHA1/6/30 default.

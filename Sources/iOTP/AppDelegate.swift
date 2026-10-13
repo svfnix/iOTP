@@ -77,7 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         store.lockIfIdle()
 
         if store.isLocked {
-            menu.addItem(item("Unlock with \(BiometricLock.description)…", #selector(unlockVault)))
+            menu.addItem(item("Unlock with \(BiometricLock.description)", #selector(unlockVault)))
             menu.addItem(.separator())
             menu.addItem(item("Settings", #selector(openSettingsFromMenu)))
             menu.addItem(.separator())
@@ -261,7 +261,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let appItem = NSMenuItem()
         main.addItem(appItem)
         let appMenu = NSMenu(title: "iOTP")
-        appMenu.addItem(withTitle: "Settings…", action: #selector(openSettingsFromMenu), keyEquivalent: ",")
+        appMenu.addItem(withTitle: "Settings", action: #selector(openSettingsFromMenu), keyEquivalent: ",")
         appMenu.addItem(.separator())
         appMenu.addItem(withTitle: "Hide iOTP", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         appMenu.addItem(.separator())
