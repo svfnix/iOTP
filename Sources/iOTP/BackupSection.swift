@@ -41,9 +41,9 @@ struct BackupSection: View {
     var body: some View {
         Section("Backup") {
             HStack(spacing: 10) {
-                Button("Export Backup…") { begin(.export) }
+                Button("Export Backup") { begin(.export) }
                     .disabled(store.entries.isEmpty)
-                Button("Restore from Backup…") { chooseArchive() }
+                Button("Restore from Backup") { chooseArchive() }
                 Spacer()
             }
 
@@ -94,7 +94,7 @@ struct BackupSection: View {
                 Spacer()
                 Button("Cancel") { dismissSheet() }
                     .keyboardShortcut(.cancelAction)
-                Button("Export…") { performExport() }
+                Button("Export") { performExport() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(passphrase.isEmpty || passphrase != confirmation)
             }
