@@ -88,12 +88,9 @@ struct ContentView: View {
                          onCopyCode: { copyPart(entry, order: .codeOnly) },
                          onCopyPassword: { copyPart(entry, order: .passwordOnly) },
                          onMoveUp: { store.move(id: entry.id, by: -1) },
-                         onMoveDown: { store.move(id: entry.id, by: 1) })
+                         onMoveDown: { store.move(id: entry.id, by: 1) },
+                         onDropEntry: { dragged in store.move(id: dragged, onto: entry.id) })
                     .tag(entry.id)
-            }
-            .onMove { indices, destination in
-                guard search.isEmpty else { return }
-                store.move(from: indices, to: destination)
             }
         }
         .onDeleteCommand {
@@ -180,8 +177,10 @@ struct EntryRow: View {
     let onCopyPassword: () -> Void
     let onMoveUp: () -> Void
     let onMoveDown: () -> Void
+    let onDropEntry: (UUID) -> Bool
 
     @EnvironmentObject private var store: VaultStore
+    @State private var isDropTarget = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -241,6 +240,24 @@ struct EntryRow: View {
         }
         .padding(.vertical, 6)
         .contentShape(Rectangle())
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isDropTarget ? Color.accentColor.opacity(0.25) : Color.clear)
+        )
+        // List's own .onMove never catches the gesture here — the row is full of buttons and a
+        // menu — so the drag is wired up explicitly instead.
+        .draggable(entry.id.uuidString) {
+            Text(entry.title)
+                .padding(6)
+        }
+        .dropDestination(for: String.self) { items, _ in
+            guard canReorder,
+                  let first = items.first,
+                  let dragged = UUID(uuidString: first) else { return false }
+            return onDropEntry(dragged)
+        } isTargeted: { targeted in
+            isDropTarget = targeted && canReorder
+        }
         .onTapGesture(count: 2, perform: onEdit)
         .contextMenu {
             Button("Copy", action: onCopy)
