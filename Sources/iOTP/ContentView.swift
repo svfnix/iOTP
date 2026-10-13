@@ -185,10 +185,22 @@ struct EntryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             if canReorder {
+                // The handle is the only drag source: starting the drag anywhere else would fight
+                // with the row's buttons, its menu and the double-click to edit.
                 Image(systemName: "line.3.horizontal")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .help("Drag to reorder, or use the row menu")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 6)
+                    .padding(.trailing, 2)
+                    .contentShape(Rectangle())
+                    .help("Drag to reorder")
+                    .onHover { inside in
+                        if inside { NSCursor.openHand.set() } else { NSCursor.arrow.set() }
+                    }
+                    .draggable(entry.id.uuidString) {
+                        Label(entry.title, systemImage: "line.3.horizontal")
+                            .padding(6)
+                    }
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -244,12 +256,7 @@ struct EntryRow: View {
             RoundedRectangle(cornerRadius: 6)
                 .fill(isDropTarget ? Color.accentColor.opacity(0.25) : Color.clear)
         )
-        // List's own .onMove never catches the gesture here — the row is full of buttons and a
-        // menu — so the drag is wired up explicitly instead.
-        .draggable(entry.id.uuidString) {
-            Text(entry.title)
-                .padding(6)
-        }
+        // The whole row stays a drop target even though only the handle starts a drag.
         .dropDestination(for: String.self) { items, _ in
             guard canReorder,
                   let first = items.first,
