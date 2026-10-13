@@ -285,6 +285,44 @@ final class VaultStore: ObservableObject {
         return entries.indices.contains(index + offset)
     }
 
+    // MARK: - Backup
+
+    enum RestoreMode {
+        case merge
+        case replace
+    }
+
+    func exportBackup(passphrase: String) throws -> Data {
+        let json = try JSONEncoder().encode(entries)
+        return try BackupArchive.seal(json, passphrase: passphrase)
+    }
+
+    /// Returns how many entries the backup held. Merging matches on id, so restoring the same
+    /// backup twice updates entries in place instead of duplicating them.
+    @discardableResult
+    func restoreBackup(_ archive: Data, passphrase: String, mode: RestoreMode) throws -> Int {
+        let json = try BackupArchive.open(archive, passphrase: passphrase)
+        let restored = try JSONDecoder().decode([OTPEntry].self, from: json)
+
+        switch mode {
+        case .replace:
+            entries = restored
+        case .merge:
+            var merged = entries
+            for entry in restored {
+                if let index = merged.firstIndex(where: { $0.id == entry.id }) {
+                    merged[index] = entry
+                } else {
+                    merged.append(entry)
+                }
+            }
+            entries = merged
+        }
+
+        save()
+        return restored.count
+    }
+
     // MARK: - Clipboard
 
     /// Builds the string a Copy button puts on the clipboard.

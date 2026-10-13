@@ -191,7 +191,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             settingsWindow = makeWindow(title: "iOTP Settings",
                                         content: view,
                                         resizable: false,
-                                        contentSize: NSSize(width: 440, height: 560))
+                                        contentSize: NSSize(width: 460, height: 680))
         }
         present(settingsWindow)
     }

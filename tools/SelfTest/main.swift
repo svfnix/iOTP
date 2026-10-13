@@ -173,6 +173,50 @@ do {
 }
 try? FileManager.default.removeItem(at: sandbox)
 
+print("\nBackup archive")
+do {
+    let vault = Data(#"[{"name":"Github","password":"hunter2"}]"#.utf8)
+    let archive = try BackupArchive.seal(vault, passphrase: "correct horse battery staple")
+
+    check("round trips", try BackupArchive.open(archive, passphrase: "correct horse battery staple") == vault)
+    check("passphrase is not in the file", archive.range(of: Data("correct horse".utf8)) == nil)
+    check("contents are not in the file", archive.range(of: Data("hunter2".utf8)) == nil)
+    check("file announces itself", String(data: archive, encoding: .utf8)?.contains("iotp.backup") == true)
+    check("records when it was taken", BackupArchive.inspect(archive) != nil)
+
+    check("wrong passphrase is refused",
+          (try? BackupArchive.open(archive, passphrase: "correct horse battery stapl")) == nil)
+    check("empty passphrase is refused on export",
+          (try? BackupArchive.seal(vault, passphrase: "")) == nil)
+
+    // Same input, two exports: a fresh salt each time means the files must differ.
+    let second = try BackupArchive.seal(vault, passphrase: "correct horse battery staple")
+    check("each export uses a fresh salt", archive != second)
+    check("both still open", try BackupArchive.open(second, passphrase: "correct horse battery staple") == vault)
+
+    // Tamper with the ciphertext: GCM must reject it rather than return altered data.
+    var tampered = String(data: archive, encoding: .utf8)!
+    if let payloadRange = tampered.range(of: "\"payload\" : \"") {
+        let index = tampered.index(payloadRange.upperBound, offsetBy: 4)
+        let original = tampered[index]
+        tampered.replaceSubrange(index...index, with: original == "A" ? "B" : "A")
+    }
+    check("tampered payload is rejected",
+          (try? BackupArchive.open(Data(tampered.utf8), passphrase: "correct horse battery staple")) == nil)
+
+    check("a plain JSON file is not mistaken for a backup",
+          (try? BackupArchive.open(Data(#"{"hello":"world"}"#.utf8), passphrase: "x")) == nil)
+    check("garbage is rejected", (try? BackupArchive.open(Data([0x00, 0x01, 0x02]), passphrase: "x")) == nil)
+    check("inspect ignores non-backups", BackupArchive.inspect(Data(#"{"hello":"world"}"#.utf8)) == nil)
+
+    let unicode = "گذرواژهٔ من ۱۲۳"
+    let unicodeArchive = try BackupArchive.seal(vault, passphrase: unicode)
+    check("non-ASCII passphrase works", try BackupArchive.open(unicodeArchive, passphrase: unicode) == vault)
+} catch {
+    print("  FAIL backup: \(error)")
+    failures += 1
+}
+
 print("\nReordering")
 let list = ["A", "B", "C", "D"]
 check("drag down lands after the target", Reordering.move(list, from: 0, onto: 2).joined(), "BCAD")

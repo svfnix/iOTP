@@ -16,5 +16,6 @@ swiftc -o "$OUT" \
     Sources/iOTP/VaultStorage.swift \
     Sources/iOTP/Keychain.swift \
     Sources/iOTP/AppSettings.swift \
-    Sources/iOTP/Reordering.swift
+    Sources/iOTP/Reordering.swift \
+    Sources/iOTP/BackupArchive.swift
 "$OUT"
