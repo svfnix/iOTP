@@ -46,7 +46,7 @@ struct EntryEditorWindow: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 field("Name") {
-                    TextField("", text: $editor.draft.name, prompt: Text("Gmail, Binance, …"))
+                    TextField("", text: $editor.draft.name, prompt: Text("Gmail, Binance"))
                 }
                 field("Password") {
                     HStack(spacing: 6) {
@@ -158,8 +158,8 @@ struct EntryEditorWindow: View {
             }
 
             HStack(spacing: 8) {
-                Button("Scan from Screen…") { scanScreen() }
-                Button("Choose Image…") { chooseImage() }
+                Button("Scan from Screen") { scanScreen() }
+                Button("Choose Image") { chooseImage() }
                 Button("Paste") { pasteFromClipboard() }
                 Spacer()
             }

@@ -59,10 +59,10 @@ That opens a fixed 470×620 window with three things:
 2. **Password** — your fixed password.
 3. **Authenticator QR** — feed it the QR in any of four ways:
    - drag a QR image or screenshot onto the dashed box,
-   - **Scan from Screen…** — drag a selection over a QR that is on screen right now
+   - **Scan from Screen** — drag a selection over a QR that is on screen right now
      (macOS asks for Screen Recording permission the first time),
-   - **Choose Image…** — pick a saved screenshot or photo of the QR,
-   - **Paste** — an `otpauth://…` link or a QR image already on the clipboard.
+   - **Choose Image** — pick a saved screenshot or photo of the QR,
+   - **Paste** — an `otpauth://` link or a QR image already on the clipboard.
 
    There is also a disclosure row for typing the base32 setup key by hand, with algorithm,
    digit-count and period controls for the rare site that does not use the SHA1/6/30 default.
@@ -81,6 +81,7 @@ if it holds several accounts, a picker appears so you can attach the right one t
 - **Require Touch ID to unlock** — optional app lock (falls back to the login password on Macs
   without a sensor).
 - **Store vault in** — encrypted file (default, never prompts) or the login keychain.
+- **Backup** — export the vault to a single passphrase-protected file, and restore it later.
 
 ## Where the data lives
 
@@ -109,6 +110,22 @@ menu gains a **Lock Now** item.
 If storage ever fails, the manage window shows an orange banner and entries are kept in memory for
 that session rather than being silently lost.
 
+## Backups
+
+Settings ▸ Backup writes the whole vault to one `.iotpbackup` file. It is deliberately **not**
+sealed with the local `key.bin` — that key lives on the same disk as the vault, so a backup locked
+with it would die with the machine. Instead you choose a passphrase, and the key is derived from it
+with PBKDF2-HMAC-SHA256 (310,000 iterations, a fresh 16-byte salt per export) before AES-GCM seals
+the contents. The envelope is readable JSON that names its own format, version, KDF and iteration
+count, so a future version can still open it.
+
+The passphrase is stored nowhere. Lose it and the backup is unopenable — keep it somewhere other
+than the Mac you are backing up.
+
+Restoring offers **merge** (entries are added, matching ones updated) or **replace** (the current
+vault is discarded). Tampered files and wrong passphrases both fail closed: AES-GCM refuses to
+return anything it cannot authenticate.
+
 ## Layout
 
 ```
@@ -121,6 +138,9 @@ Sources/iOTP/
   SettingsView.swift
   Vault.swift            entry model, the store, lock state, clipboard handling
   VaultStorage.swift     encrypted-file and keychain backends
+  BackupArchive.swift    passphrase-sealed backup format
+  BackupSection.swift    the Backup block of the Settings window
+  Reordering.swift       the index arithmetic behind drag-to-reorder
   BiometricLock.swift    Touch ID
   TOTP.swift             RFC 6238
   Base32.swift           RFC 4648
