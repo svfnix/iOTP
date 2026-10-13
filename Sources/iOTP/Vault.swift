@@ -259,9 +259,30 @@ final class VaultStore: ObservableObject {
         save()
     }
 
-    func move(from source: IndexSet, to destination: Int) {
-        entries.move(fromOffsets: source, toOffset: destination)
+    /// Shifts one entry a single step. Backs the Move Up / Move Down commands.
+    func move(id: UUID, by offset: Int) {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+        let reordered = Reordering.shift(entries, at: index, by: offset)
+        guard reordered.count == entries.count, index + offset != index else { return }
+        entries = reordered
         save()
+    }
+
+    /// Backs drag-and-drop: the dragged entry is dropped onto the row it was released over.
+    @discardableResult
+    func move(id: UUID, onto targetID: UUID) -> Bool {
+        guard id != targetID,
+              let source = entries.firstIndex(where: { $0.id == id }),
+              let target = entries.firstIndex(where: { $0.id == targetID }) else { return false }
+
+        entries = Reordering.move(entries, from: source, onto: target)
+        save()
+        return true
+    }
+
+    func canMove(id: UUID, by offset: Int) -> Bool {
+        guard let index = entries.firstIndex(where: { $0.id == id }) else { return false }
+        return entries.indices.contains(index + offset)
     }
 
     // MARK: - Clipboard

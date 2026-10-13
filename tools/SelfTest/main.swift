@@ -173,6 +173,24 @@ do {
 }
 try? FileManager.default.removeItem(at: sandbox)
 
+print("\nReordering")
+let list = ["A", "B", "C", "D"]
+check("drag down lands after the target", Reordering.move(list, from: 0, onto: 2).joined(), "BCAD")
+check("drag up lands before the target", Reordering.move(list, from: 3, onto: 1).joined(), "ADBC")
+check("drag onto the neighbour below", Reordering.move(list, from: 1, onto: 2).joined(), "ACBD")
+check("drag onto the neighbour above", Reordering.move(list, from: 2, onto: 1).joined(), "ACBD")
+check("drag to the end", Reordering.move(list, from: 0, onto: 3).joined(), "BCDA")
+check("drag to the start", Reordering.move(list, from: 3, onto: 0).joined(), "DABC")
+check("dropping onto itself changes nothing", Reordering.move(list, from: 2, onto: 2).joined(), "ABCD")
+check("out-of-range source is ignored", Reordering.move(list, from: 9, onto: 1).joined(), "ABCD")
+check("out-of-range target is ignored", Reordering.move(list, from: 1, onto: 9).joined(), "ABCD")
+check("every element survives a move", Reordering.move(list, from: 0, onto: 3).sorted().joined(), "ABCD")
+
+check("shift up", Reordering.shift(list, at: 2, by: -1).joined(), "ACBD")
+check("shift down", Reordering.shift(list, at: 0, by: 1).joined(), "BACD")
+check("shift past the top is ignored", Reordering.shift(list, at: 0, by: -1).joined(), "ABCD")
+check("shift past the bottom is ignored", Reordering.shift(list, at: 3, by: 1).joined(), "ABCD")
+
 print("\nCountdown")
 check("30s period at t=0", "\(TOTP.secondsRemaining(period: 30, date: at(0)))", "30")
 check("30s period at t=25", "\(TOTP.secondsRemaining(period: 30, date: at(25)))", "5")

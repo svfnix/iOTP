@@ -48,7 +48,10 @@ Clicking the menu-bar key icon drops a plain macOS menu: one line per password, 
 glyph and reading `Name (123456)`. Click it to copy, then Manage Passwords / Settings / Quit.
 
 **Manage Passwords** is the fuller view: live codes, a countdown ring per row, a Copy button,
-drag-to-reorder, search, edit and delete. Its **+** button (or ⌘N) is where passwords are added.
+search, edit and delete. Each row starts with a drag handle: pull it onto another row and the entry
+takes that row's place. The row's menu also has **Move Up** / **Move Down** for one step at a time.
+Both are held back while a search is filtering the list. Its **+** button (or ⌘N) is where passwords
+are added.
 
 That opens a fixed 470×620 window with three things:
 
