@@ -204,8 +204,11 @@ struct EntryRow: View {
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(entry.title)
-                    .font(.body.weight(.medium))
+                HStack(spacing: 7) {
+                    Text(entry.title)
+                        .font(.body.weight(.medium))
+                    contentBadges
+                }
                 if !entry.subtitle.isEmpty {
                     Text(entry.subtitle)
                         .font(.caption)
@@ -275,6 +278,24 @@ struct EntryRow: View {
             Divider()
             Button("Edit", action: onEdit)
             Button("Delete", role: .destructive, action: onDelete)
+        }
+    }
+
+    /// One icon per thing the entry actually holds: a key for a stored password, a QR code for an
+    /// authenticator secret. An entry with both shows both; an entry with neither shows none.
+    @ViewBuilder
+    private var contentBadges: some View {
+        if !entry.password.isEmpty {
+            Image(systemName: "key.fill")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Has a password")
+        }
+        if entry.hasOTP {
+            Image(systemName: "qrcode")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .help("Has an authenticator code")
         }
     }
 
