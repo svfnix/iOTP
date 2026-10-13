@@ -217,6 +217,49 @@ do {
     failures += 1
 }
 
+print("\nWrite on quit")
+check("writes a loaded, unlocked, non-empty vault",
+      FlushPolicy.shouldWrite(isLoaded: true, isLocked: false, entryCount: 2))
+check("never writes while locked (memory is empty on purpose)",
+      !FlushPolicy.shouldWrite(isLoaded: true, isLocked: true, entryCount: 0))
+check("never writes while locked, even with entries",
+      !FlushPolicy.shouldWrite(isLoaded: true, isLocked: true, entryCount: 2))
+check("never writes after a failed load",
+      !FlushPolicy.shouldWrite(isLoaded: false, isLocked: false, entryCount: 0))
+check("never writes before loading has happened",
+      !FlushPolicy.shouldWrite(isLoaded: false, isLocked: false, entryCount: 3))
+check("nothing to write for an empty vault",
+      !FlushPolicy.shouldWrite(isLoaded: true, isLocked: false, entryCount: 0))
+
+// End to end, on the sandbox from the storage tests above: the file disappears while the store
+// is alive, and a flush must put it back.
+MainActor.assumeIsolated {
+    do {
+        VaultStorage.removeFile()
+        let store = VaultStore()
+        store.add(OTPEntry(name: "Github", password: "hunter2"))
+        store.add(OTPEntry(name: "Gitlab", password: "swordfish"))
+
+        VaultStorage.removeFile()
+        check("the vault file is gone", try VaultStorage.load() == nil)
+
+        check("flush reports it wrote", store.flush())
+        let restored = try VaultStorage.load().flatMap { try JSONDecoder().decode([OTPEntry].self, from: $0) }
+        check("flush brought both entries back", restored?.map(\.name) == ["Github", "Gitlab"])
+
+        // A second store that cannot trust its memory must not touch the file.
+        let before = try VaultStorage.load()
+        let untrusted = VaultStore(loadImmediately: false)
+        check("a store that never loaded refuses to flush", !untrusted.flush())
+        check("and leaves the file as it was", try VaultStorage.load() == before)
+
+        VaultStorage.removeFile()
+    } catch {
+        print("  FAIL flush: \(error)")
+        failures += 1
+    }
+}
+
 print("\nReordering")
 let list = ["A", "B", "C", "D"]
 check("drag down lands after the target", Reordering.move(list, from: 0, onto: 2).joined(), "BCAD")

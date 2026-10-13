@@ -112,6 +112,10 @@ final class VaultStore: ObservableObject {
     /// True when the Touch ID lock is on and the vault has not been unlocked yet this session.
     @Published private(set) var isLocked = false
 
+    /// True once the vault file has been read successfully (or confirmed absent). Guards the write
+    /// on quit: a vault that failed to load must never be overwritten with an empty list.
+    private var isLoaded = false
+
     private var ticker: AnyCancellable?
     private var clipboardClearWorkItem: DispatchWorkItem?
     private var lastActivity = Date()
@@ -163,6 +167,7 @@ final class VaultStore: ObservableObject {
     func lock() {
         entries = []
         isLocked = true
+        isLoaded = false
     }
 
     func unlock(completion: ((Bool) -> Void)? = nil) {
@@ -198,15 +203,29 @@ final class VaultStore: ObservableObject {
             guard let data = try VaultStorage.load() else {
                 entries = []
                 isPersistent = true
+                isLoaded = true
                 return
             }
             entries = try JSONDecoder().decode([OTPEntry].self, from: data)
             isPersistent = true
+            isLoaded = true
             storageError = nil
         } catch {
             storageError = error.localizedDescription
             isPersistent = false
         }
+    }
+
+    /// Writes the current entries out once more, on quit. Every change already saves as it happens,
+    /// so this is the safety net for a file that disappeared while the app was open: the memory copy
+    /// is the only one left, and quitting is the last chance to put it back.
+    @discardableResult
+    func flush() -> Bool {
+        guard FlushPolicy.shouldWrite(isLoaded: isLoaded, isLocked: isLocked, entryCount: entries.count) else {
+            return false
+        }
+        save()
+        return isPersistent
     }
 
     private func save() {

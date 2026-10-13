@@ -107,6 +107,11 @@ For a stronger lock, turn on **Require Touch ID to unlock** in Settings: the vau
 (entries are not even decrypted) until you authenticate, relocks after 15 quiet minutes, and the
 menu gains a **Lock Now** item.
 
+Every change is written as it happens, and the vault is written once more when the app quits (menu
+Quit, logout, shutdown, or a plain `kill`). That last write is a safety net: if the vault file is
+deleted while the app is open, quitting puts it back from memory. It is skipped when the vault is
+locked or failed to load, so it can never replace real data with an empty list.
+
 If storage ever fails, the manage window shows an orange banner and entries are kept in memory for
 that session rather than being silently lost.
 

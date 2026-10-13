@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var editorWindow: NSWindow?
     private var manageWindow: NSWindow?
     private var settingsWindow: NSWindow?
+    private var terminationSignal: DispatchSourceSignal?
 
     // MARK: - Lifecycle
 
@@ -19,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         AppDelegate.shared = self
         NSApp.setActivationPolicy(.accessory)
         installStatusItem()
+        routeTerminationSignalThroughQuit()
 
         // Test hook: `iOTP --open-window editor|manage|settings` opens a window straight away and
         // prints what actually ended up on screen, so windows can be exercised without clicking.
@@ -45,6 +47,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.async {
             if NSApp.mainMenu == nil { NSApp.mainMenu = Self.makeMainMenu() }
         }
+    }
+
+    /// Quit, log out and shut down all end here, so the vault is written one last time.
+    func applicationWillTerminate(_ notification: Notification) {
+        store.flush()
+    }
+
+    /// A plain SIGTERM (what `pkill` and most process managers send) ends the process outright and
+    /// never reaches applicationWillTerminate. Turning it into a normal quit makes it flush too.
+    private func routeTerminationSignalThroughQuit() {
+        signal(SIGTERM, SIG_IGN)
+        let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+        source.setEventHandler { NSApp.terminate(nil) }
+        source.resume()
+        terminationSignal = source
     }
 
     private func installStatusItem() {
